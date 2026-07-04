@@ -1,3 +1,6 @@
+// MIT License - Copyright (c) odvancee
+// Source: https://github.com/odvancee/unity-tools
+
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
