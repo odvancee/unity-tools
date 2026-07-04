@@ -1,3 +1,6 @@
+// MIT No Attribution License - odvancee
+// Source: https://github.com/odvancee/unity-tools
+
 #if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
