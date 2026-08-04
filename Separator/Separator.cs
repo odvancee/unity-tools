@@ -24,7 +24,11 @@ public class Separator : MonoBehaviour
         Selection.selectionChanged += HandleSelectionChanged;
     }
 
-    private void OnValidate() => EnforceRestrictions();
+    private void OnValidate()
+    {
+        EnforceRestrictions();
+        NormalizeName();
+    }
 
     private void Awake() => _allSeparators.Add(this);
     private void OnEnable() => _allSeparators.Add(this);
@@ -135,6 +139,22 @@ public class Separator : MonoBehaviour
         separator.AddComponent<Separator>().hideFlags = HideFlags.NotEditable;
         separator.transform.hideFlags = HideFlags.NotEditable;
         return separator;
+    }
+
+    // Strips duplication numbering
+    private void NormalizeName()
+    {
+        string rawName = gameObject.name;
+        int rightIndex = rawName.LastIndexOf(RIGHT_DECORATOR);
+        if (rightIndex == -1) return;
+
+        string suffix = rawName.Substring(rightIndex + RIGHT_DECORATOR.Length);
+        if (string.IsNullOrEmpty(suffix)) return;
+
+        int leftIndex = rawName.IndexOf(LEFT_DECORATOR);
+        string innerContent = rawName.Substring(leftIndex + LEFT_DECORATOR.Length, rightIndex - (leftIndex + LEFT_DECORATOR.Length)).Trim(_trimmedChars);
+
+        gameObject.name = GetDecoratedName(innerContent);
     }
 
     [ContextMenu(nameof(UpdateName))]
