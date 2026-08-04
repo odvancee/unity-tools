@@ -24,6 +24,7 @@ Name Template: `{LEFT_DECORATOR}{FILLER}{name}{FILLER}{RIGHT_DECORATOR}`
 - Uses the `EditorOnly` tag, which removes it from the build
 - Customize `LEFT_DECORATOR`, `RIGHT_DECORATOR`, and `FILLER`
 - Use `UpdateName` from a Separator's context menu to update its name after modifying decorative fields
+- Use `ToggleSelectionMode` from a Separator's context menu to toggle whether it removes itself from selection when selected alongside non-separator objects (`SelectWithMultiple`)
 
 ### Usage
 

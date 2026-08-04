@@ -16,11 +16,19 @@ public class Separator : MonoBehaviour
     private static readonly HashSet<Separator> _allSeparators = new();
     private static readonly char[] _trimmedChars = new char[] { '=', '~', '-', '_', '@', '%', '#', '*', '+', '$', '<', '>', '`', ' ', '\t' };
 
-    static Separator() => EditorApplication.hierarchyChanged += EnforceRestrictionsOnAll;
+    public bool SelectWithMultiple = false;
+
+    static Separator()
+    {
+        EditorApplication.hierarchyChanged += EnforceRestrictionsOnAll;
+        Selection.selectionChanged += HandleSelectionChanged;
+    }
+
     private void OnValidate() => EnforceRestrictions();
+
     private void Awake() => _allSeparators.Add(this);
     private void OnEnable() => _allSeparators.Add(this);
-    private void OnDestroy() => _allSeparators.Remove(this);
+    private void OnDisable() => _allSeparators.Remove(this);
 
     private static void EnforceRestrictionsOnAll()
     {
@@ -44,7 +52,7 @@ public class Separator : MonoBehaviour
         {
             Component comp = components[i];
             comp.hideFlags = HideFlags.NotEditable;
-            
+
             if (comp is Transform || comp is Separator) continue;
 
             DestroyImmediate(comp);
@@ -59,6 +67,7 @@ public class Separator : MonoBehaviour
 
         EditorApplication.delayCall += () =>
         {
+            if (this == null) return;
             int baseIndex = transform.GetSiblingIndex();
             int childCount = transform.childCount;
             Transform[] children = new Transform[childCount];
@@ -138,5 +147,57 @@ public class Separator : MonoBehaviour
     }
 
     private static string GetDecoratedName(string name) => $"{LEFT_DECORATOR}{FILLER}{name}{FILLER}{RIGHT_DECORATOR}";
+
+    private static void HandleSelectionChanged()
+    {
+        EditorApplication.delayCall += () =>
+        {
+            Object[] selection = Selection.objects;
+            if (selection == null || selection.Length <= 1) return;
+
+            bool hasNonSeparator = false;
+            bool hasRestrictedSeparator = false;
+
+            for (int i = 0; i < selection.Length; i++)
+            {
+                if (selection[i] is GameObject go && go.TryGetComponent(out Separator separator))
+                {
+                    if (!separator.SelectWithMultiple) hasRestrictedSeparator = true;
+                }
+                else
+                {
+                    hasNonSeparator = true;
+                }
+
+                if (hasNonSeparator && hasRestrictedSeparator) break;
+            }
+
+            // Contains only separators or Contains no restricted separators
+            if (!hasNonSeparator || !hasRestrictedSeparator) return;
+
+            Object[] cleaned = new Object[selection.Length];
+            int count = 0;
+
+            for (int i = 0; i < selection.Length; i++)
+            {
+                Object obj = selection[i];
+                if (obj is GameObject go && go.TryGetComponent(out Separator separator) && !separator.SelectWithMultiple)
+                {
+                    continue;
+                }
+
+                cleaned[count++] = obj;
+            }
+
+            if (count != selection.Length)
+            {
+                System.Array.Resize(ref cleaned, count);
+                Selection.objects = cleaned;
+            }
+        };
+    }
+
+    [ContextMenu(nameof(ToggleSelectionMode))]
+    private void ToggleSelectionMode() => SelectWithMultiple = !SelectWithMultiple;
 }
 #endif
